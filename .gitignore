@@ -1,0 +1,16 @@
+.DS_Store
+.env
+.venv/
+__pycache__/
+*.py[cod]
+
+node_modules/
+downloads/
+outputs/
+source/
+
+metadata/*
+!metadata/
+!metadata/uap-csv.csv
+
+*.part
