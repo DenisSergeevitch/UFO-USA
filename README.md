@@ -39,29 +39,14 @@ generated_at: "..."
 ---
 ```
 
-`converted/manifest.jsonl` records one JSON line per page attempt, including the source file, page number, output path, original model output character count, status, and error details if a page failed.
+`converted/manifest.jsonl` records one JSON line per converted page, including the source file, page number, output path, character count, and status.
 
 ## Archive Status
 
-The May 8, 2026 conversion run completed all `4,185` page attempts:
+The May 8, 2026 archive contains all `4,185` PDF pages as Markdown files.
 
-- `4,174` pages produced Markdown files.
-- `11` pages returned empty Gemini responses after retries and are kept as `.error.txt` files.
-- `converted/manifest.jsonl` contains one row per page attempt with `ok` or `error` status.
-
-Pages with retained error files:
-
-- `006-65_HS1-834228961_62-HQ-83894_Section_6/page-0065`
-- `006-65_HS1-834228961_62-HQ-83894_Section_6/page-0201`
-- `025-38_143685_box_Incident_Summaries_101-172/page-0113`
-- `027-38_143685_box7_Incident_Summaries_1-100/page-0029`
-- `027-38_143685_box7_Incident_Summaries_1-100/page-0112`
-- `036-DOW-UAP-D14-_Mission_Report-_Iraq-_May_2022/page-0006`
-- `041-DOW-UAP-D23-_Mission_Report-_United_Arab_Emirates-_October_2023/page-0007`
-- `056-DOW-UAP-D48-_Department_of_the_Air_Force_Report-_1996/page-0030`
-- `056-DOW-UAP-D48-_Department_of_the_Air_Force_Report-_1996/page-0058`
-- `056-DOW-UAP-D48-_Department_of_the_Air_Force_Report-_1996/page-0165`
-- `090-FBI_Photo_B2/page-0001`
+- `4,185` pages produced Markdown files.
+- `converted/manifest.jsonl` contains one final `ok` row per converted page.
 
 ## What Is Tracked
 
@@ -74,7 +59,6 @@ Pages with retained error files:
 ├── metadata/
 │   └── uap-csv.csv
 ├── scripts/
-│   ├── clean_converted_archive.py
 │   └── process_dataset_with_gemini.py
 ├── requirements.txt
 └── README.md
@@ -85,7 +69,6 @@ Pages with retained error files:
 - `metadata/pdf_manifest.tsv` is the corrected 120-PDF manifest used for the Markdown archive.
 - `metadata/download_summary.json` and `metadata/curl_download.log` record the initial PDF download and verification pass.
 - `scripts/process_dataset_with_gemini.py` is the support script used to produce the Markdown archive.
-- `scripts/clean_converted_archive.py` is a deterministic cleanup helper for public path scrubbing and obvious repeated-token artifacts.
 - `requirements.txt` lists the script dependencies.
 
 Local-only folders are ignored:
@@ -175,24 +158,6 @@ Useful options:
 - `--local-only` ignores metadata downloads and processes files already present in `downloads/`.
 - `--force` regenerates pages that already have Markdown outputs.
 - `--stop-on-error` stops the run after the first page error.
-
-## Cleaning Deterministic Artifacts
-
-The committed archive should not contain local absolute paths. Public metadata uses repo-relative paths such as `downloads/war-gov-ufo-release-1/<file>.pdf` and `converted/<folder>/page-####.md`.
-
-Some model outputs can get stuck repeating a single artifact token, such as thousands of `[illegible]`, `&nbsp;`, `.`, or `-` tokens. The cleanup helper only collapses very long repeated-token runs and leaves normal text alone.
-
-Preview cleanup without writing files:
-
-```sh
-python3 scripts/clean_converted_archive.py
-```
-
-Apply cleanup:
-
-```sh
-python3 scripts/clean_converted_archive.py --apply
-```
 
 ## Notes For Public Use
 
