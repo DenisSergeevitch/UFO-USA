@@ -28,6 +28,10 @@ DEFAULT_MODEL = "gemini-3.1-flash-lite"
 DEFAULT_TEMPERATURE = 0.0
 DEFAULT_WORKERS = max(1, min(16, (os.cpu_count() or 4) * 2))
 DEFAULT_RPM = 10_000
+PUBLIC_PATH_MARKERS = (
+    ("downloads", "war-gov-ufo-release-1"),
+    ("converted",),
+)
 
 DEFAULT_PROMPT = """Transcribe and normalize this scanned government UFO/UAP source page into Markdown.
 
@@ -131,6 +135,21 @@ def yaml_value(value: object) -> str:
     if isinstance(value, int):
         return str(value)
     return json.dumps(str(value), ensure_ascii=False)
+
+
+def public_dataset_path(path: Path) -> str:
+    """Return repo-portable paths for generated public metadata."""
+    resolved_parts = path.resolve().parts
+    for marker in PUBLIC_PATH_MARKERS:
+        marker_len = len(marker)
+        for index in range(0, len(resolved_parts) - marker_len + 1):
+            if resolved_parts[index : index + marker_len] == marker:
+                return Path(*resolved_parts[index:]).as_posix()
+
+    try:
+        return path.resolve().relative_to(Path.cwd().resolve()).as_posix()
+    except ValueError:
+        return path.name
 
 
 def append_jsonl(path: Path, record: dict[str, object]) -> None:
@@ -475,7 +494,7 @@ def build_markdown_file(
 ) -> str:
     front_matter = {
         "source_title": asset.title,
-        "source_file": str(asset.local_path),
+        "source_file": public_dataset_path(asset.local_path),
         "source_url": asset.source_url,
         "asset_type": asset.asset_type,
         "dataset_row": asset.row_number,
@@ -560,10 +579,10 @@ def process_asset(
                     {
                         "status": "ok",
                         "asset": asset.slug,
-                        "source_file": str(asset.local_path),
+                        "source_file": public_dataset_path(asset.local_path),
                         "page": page_number,
                         "page_count": page_count,
-                        "output": str(output_path),
+                        "output": public_dataset_path(output_path),
                         "chars": len(body),
                         "generated_at": datetime.now(timezone.utc).isoformat(),
                     },
@@ -579,7 +598,7 @@ def process_asset(
                     {
                         "status": "error",
                         "asset": asset.slug,
-                        "source_file": str(asset.local_path),
+                        "source_file": public_dataset_path(asset.local_path),
                         "page": page_number,
                         "page_count": page_count,
                         "error": f"{type(exc).__name__}: {exc}",
@@ -623,10 +642,10 @@ def process_asset(
             {
                 "status": "ok",
                 "asset": asset.slug,
-                "source_file": str(asset.local_path),
+                "source_file": public_dataset_path(asset.local_path),
                 "page": 1,
                 "page_count": 1,
-                "output": str(output_path),
+                "output": public_dataset_path(output_path),
                 "chars": len(body),
                 "generated_at": datetime.now(timezone.utc).isoformat(),
             },
@@ -733,10 +752,10 @@ def process_page_task(
             {
                 "status": "ok",
                 "asset": task.asset.slug,
-                "source_file": str(task.asset.local_path),
+                "source_file": public_dataset_path(task.asset.local_path),
                 "page": task.page_number,
                 "page_count": task.page_count,
-                "output": str(task.output_path),
+                "output": public_dataset_path(task.output_path),
                 "chars": len(body),
                 "generated_at": datetime.now(timezone.utc).isoformat(),
             },
@@ -749,7 +768,7 @@ def process_page_task(
             {
                 "status": "error",
                 "asset": task.asset.slug,
-                "source_file": str(task.asset.local_path),
+                "source_file": public_dataset_path(task.asset.local_path),
                 "page": task.page_number,
                 "page_count": task.page_count,
                 "error": f"{type(exc).__name__}: {exc}",
@@ -805,7 +824,7 @@ def process_page_tasks(tasks: list[PageTask], args: argparse.Namespace, api_key:
                 record = {
                     "status": "error",
                     "asset": task.asset.slug,
-                    "source_file": str(task.asset.local_path),
+                    "source_file": public_dataset_path(task.asset.local_path),
                     "page": task.page_number,
                     "page_count": task.page_count,
                     "error": f"{type(exc).__name__}: {exc}",

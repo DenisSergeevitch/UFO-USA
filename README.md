@@ -39,7 +39,7 @@ generated_at: "..."
 ---
 ```
 
-`converted/manifest.jsonl` records one JSON line per page attempt, including the source file, page number, output path, model output character count, status, and error details if a page failed.
+`converted/manifest.jsonl` records one JSON line per page attempt, including the source file, page number, output path, original model output character count, status, and error details if a page failed.
 
 ## Archive Status
 
@@ -74,6 +74,7 @@ Pages with retained error files:
 ├── metadata/
 │   └── uap-csv.csv
 ├── scripts/
+│   ├── clean_converted_archive.py
 │   └── process_dataset_with_gemini.py
 ├── requirements.txt
 └── README.md
@@ -84,6 +85,7 @@ Pages with retained error files:
 - `metadata/pdf_manifest.tsv` is the corrected 120-PDF manifest used for the Markdown archive.
 - `metadata/download_summary.json` and `metadata/curl_download.log` record the initial PDF download and verification pass.
 - `scripts/process_dataset_with_gemini.py` is the support script used to produce the Markdown archive.
+- `scripts/clean_converted_archive.py` is a deterministic cleanup helper for public path scrubbing and obvious repeated-token artifacts.
 - `requirements.txt` lists the script dependencies.
 
 Local-only folders are ignored:
@@ -173,6 +175,24 @@ Useful options:
 - `--local-only` ignores metadata downloads and processes files already present in `downloads/`.
 - `--force` regenerates pages that already have Markdown outputs.
 - `--stop-on-error` stops the run after the first page error.
+
+## Cleaning Deterministic Artifacts
+
+The committed archive should not contain local absolute paths. Public metadata uses repo-relative paths such as `downloads/war-gov-ufo-release-1/<file>.pdf` and `converted/<folder>/page-####.md`.
+
+Some model outputs can get stuck repeating a single artifact token, such as thousands of `[illegible]`, `&nbsp;`, `.`, or `-` tokens. The cleanup helper only collapses very long repeated-token runs and leaves normal text alone.
+
+Preview cleanup without writing files:
+
+```sh
+python3 scripts/clean_converted_archive.py
+```
+
+Apply cleanup:
+
+```sh
+python3 scripts/clean_converted_archive.py --apply
+```
 
 ## Notes For Public Use
 
