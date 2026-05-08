@@ -101,7 +101,7 @@ The conversion was done page by page:
 6. Save Gemini's returned Markdown as `converted/<source-folder>/page-####.md`.
 7. Append the page result to `converted/manifest.jsonl`.
 
-The default model used by the support script is `gemini-3.1-flash-lite`. The script supports parallel page workers and a global request-per-minute gate.
+The default model used by the support script is `gemini-3.1-flash-lite` with `temperature=0`. The script supports parallel page workers and a global request-per-minute gate.
 
 Generated Markdown should be treated as AI-assisted OCR/transcription. Use the original source PDF/image as the authoritative record when exact wording matters.
 
@@ -132,6 +132,7 @@ Generate or continue the committed archive:
 ```sh
 python3 scripts/process_dataset_with_gemini.py \
   --output-dir converted \
+  --temperature 0 \
   --workers 16 \
   --rpm 10000
 ```
@@ -142,6 +143,7 @@ Useful options:
 
 - `--workers N` controls page-level parallelism. It can also be set with `GEMINI_WORKERS`.
 - `--rpm N` controls the global Gemini request-per-minute gate. It can also be set with `GEMINI_RPM`.
+- `--temperature N` controls Gemini generation temperature. It defaults to `0`.
 - `--pages 1,4,9-12` processes selected pages only.
 - `--max-docs N` and `--max-pages-per-doc N` are useful for smoke tests.
 - `--local-only` ignores metadata downloads and processes files already present in `downloads/`.

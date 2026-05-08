@@ -25,6 +25,7 @@ from typing import Iterable
 
 SUPPORTED_EXTENSIONS = {".pdf", ".jpg", ".jpeg", ".png", ".webp", ".tif", ".tiff"}
 DEFAULT_MODEL = "gemini-3.1-flash-lite"
+DEFAULT_TEMPERATURE = 0.0
 DEFAULT_WORKERS = max(1, min(16, (os.cpu_count() or 4) * 2))
 DEFAULT_RPM = 10_000
 
@@ -405,11 +406,12 @@ def gemini_page_markdown(
     prompt: str,
     image_bytes: bytes,
     mime_type: str,
+    temperature: float,
     retries: int,
     retry_sleep: float,
     rate_limiter: RequestRateLimiter | None,
 ) -> str:
-    config_kwargs: dict[str, object] = {}
+    config_kwargs: dict[str, object] = {"temperature": temperature}
     if thinking_level.lower() != "none":
         thinking_fields = getattr(types_module.ThinkingConfig, "model_fields", {})
         if "thinking_level" in thinking_fields:
@@ -538,6 +540,7 @@ def process_asset(
                     prompt=prompt,
                     image_bytes=image_bytes,
                     mime_type="image/jpeg",
+                    temperature=args.temperature,
                     retries=args.retries,
                     retry_sleep=args.retry_sleep,
                     rate_limiter=rate_limiter,
@@ -606,6 +609,7 @@ def process_asset(
             prompt=prompt,
             image_bytes=image_bytes,
             mime_type=mime_type,
+            temperature=args.temperature,
             retries=args.retries,
             retry_sleep=args.retry_sleep,
             rate_limiter=rate_limiter,
@@ -708,6 +712,7 @@ def process_page_task(
             prompt=prompt,
             image_bytes=image_bytes,
             mime_type=mime_type,
+            temperature=args.temperature,
             retries=args.retries,
             retry_sleep=args.retry_sleep,
             rate_limiter=rate_limiter,
@@ -847,6 +852,12 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument("--downloads-dir", type=Path, default=Path("downloads/war-gov-ufo-release-1"))
     parser.add_argument("--output-dir", type=Path, default=Path("converted"))
     parser.add_argument("--model", default=os.environ.get("GEMINI_MODEL", DEFAULT_MODEL))
+    parser.add_argument(
+        "--temperature",
+        type=float,
+        default=float(os.environ.get("GEMINI_TEMPERATURE", DEFAULT_TEMPERATURE)),
+        help="Gemini generation temperature. Defaults to 0 for deterministic transcription.",
+    )
     parser.add_argument(
         "--workers",
         type=int,
