@@ -1,5 +1,7 @@
 # War.gov UFO Release Markdown Archive
 
+<img src="assets/fbi-september-2023-composite-sketch.jpg" alt="FBI September 2023 sighting composite sketch" width="720">
+
 This repository is the public archive for Markdown files converted from the official UFO/UAP release at [war.gov/UFO](https://www.war.gov/UFO/).
 
 The source page is the Department of War's "Presidential Unsealing and Reporting System for UAP Encounters (PURSUE)" page. It describes a government-wide effort, supported by ODNI, to identify, review, declassify, and release unresolved UAP-related records and historical documents. Release 01 is marked "Cleared for release - May 8, 2026."
@@ -52,6 +54,8 @@ The May 8, 2026 archive contains all `4,185` PDF pages as Markdown files.
 
 ```text
 .
+├── assets/
+│   └── fbi-september-2023-composite-sketch.jpg
 ├── converted/
 │   ├── 001-...
 │   ├── 002-...
@@ -64,6 +68,7 @@ The May 8, 2026 archive contains all `4,185` PDF pages as Markdown files.
 └── README.md
 ```
 
+- `assets/` contains small public visual assets used by this README.
 - `converted/` is the destination for committed Markdown transcripts.
 - `metadata/uap-csv.csv` is the release inventory used to map source records to converted folders. At repo preparation time it contained 162 rows: 120 PDF rows, 28 video rows, and 14 image rows.
 - `metadata/pdf_manifest.tsv` is the corrected 120-PDF manifest used for the Markdown archive.
