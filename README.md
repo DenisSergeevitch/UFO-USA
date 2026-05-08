@@ -41,12 +41,36 @@ generated_at: "..."
 
 `converted/manifest.jsonl` records one JSON line per page attempt, including the source file, page number, output path, model output character count, status, and error details if a page failed.
 
+## Archive Status
+
+The May 8, 2026 conversion run completed all `4,185` page attempts:
+
+- `4,174` pages produced Markdown files.
+- `11` pages returned empty Gemini responses after retries and are kept as `.error.txt` files.
+- `converted/manifest.jsonl` contains one row per page attempt with `ok` or `error` status.
+
+Pages with retained error files:
+
+- `006-65_HS1-834228961_62-HQ-83894_Section_6/page-0065`
+- `006-65_HS1-834228961_62-HQ-83894_Section_6/page-0201`
+- `025-38_143685_box_Incident_Summaries_101-172/page-0113`
+- `027-38_143685_box7_Incident_Summaries_1-100/page-0029`
+- `027-38_143685_box7_Incident_Summaries_1-100/page-0112`
+- `036-DOW-UAP-D14-_Mission_Report-_Iraq-_May_2022/page-0006`
+- `041-DOW-UAP-D23-_Mission_Report-_United_Arab_Emirates-_October_2023/page-0007`
+- `056-DOW-UAP-D48-_Department_of_the_Air_Force_Report-_1996/page-0030`
+- `056-DOW-UAP-D48-_Department_of_the_Air_Force_Report-_1996/page-0058`
+- `056-DOW-UAP-D48-_Department_of_the_Air_Force_Report-_1996/page-0165`
+- `090-FBI_Photo_B2/page-0001`
+
 ## What Is Tracked
 
 ```text
 .
 ├── converted/
-│   └── .gitkeep
+│   ├── 001-...
+│   ├── 002-...
+│   └── manifest.jsonl
 ├── metadata/
 │   └── uap-csv.csv
 ├── scripts/
