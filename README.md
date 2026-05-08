@@ -57,6 +57,8 @@ generated_at: "..."
 
 - `converted/` is the destination for committed Markdown transcripts.
 - `metadata/uap-csv.csv` is the release inventory used to map source records to converted folders. At repo preparation time it contained 162 rows: 120 PDF rows, 28 video rows, and 14 image rows.
+- `metadata/pdf_manifest.tsv` is the corrected 120-PDF manifest used for the Markdown archive.
+- `metadata/download_summary.json` and `metadata/curl_download.log` record the initial PDF download and verification pass.
 - `scripts/process_dataset_with_gemini.py` is the support script used to produce the Markdown archive.
 - `requirements.txt` lists the script dependencies.
 
@@ -67,12 +69,32 @@ Local-only folders are ignored:
 - `source/` stores local page snapshots used during scraping/debugging.
 - `node_modules/`, `.venv/`, `.env`, caches, and `.DS_Store` are local-only.
 
+## Initial Dataset
+
+The initial source PDF corpus was downloaded from [war.gov/UFO](https://www.war.gov/UFO/) via `curl` into `downloads/war-gov-ufo-release-1`.
+
+Download result:
+
+- `120` PDFs downloaded.
+- `4,185` PDF pages detected locally.
+- `2.308 GiB` total PDF bytes; `du` shows `2.4G`.
+- The broader manifest's `28` video rows and `14` image rows were excluded from the PDF archive pass.
+- Three bad manifest URLs were retried and fixed by URL-encoding spaces/brackets.
+- Verification passed: no missing files, no partial files, and all files start with `%PDF-`.
+
+Metadata/logs:
+
+- [metadata/uap-csv.csv](metadata/uap-csv.csv)
+- [metadata/pdf_manifest.tsv](metadata/pdf_manifest.tsv)
+- [metadata/download_summary.json](metadata/download_summary.json)
+- [metadata/curl_download.log](metadata/curl_download.log)
+
 ## How The Files Were Converted
 
 The conversion was done page by page:
 
-1. Read the release inventory from `metadata/uap-csv.csv`.
-2. Download or match each supported PDF/image source into `downloads/war-gov-ufo-release-1/`.
+1. Read the corrected PDF inventory from `metadata/pdf_manifest.tsv`.
+2. Download or match each supported PDF source into `downloads/war-gov-ufo-release-1/`.
 3. Render every PDF page with PyMuPDF at 200 DPI.
 4. Resize the longest side to at most 3000 pixels and encode the rendered page as JPEG.
 5. Send the page image and a transcription prompt to Gemini.
@@ -109,7 +131,6 @@ Generate or continue the committed archive:
 
 ```sh
 python3 scripts/process_dataset_with_gemini.py \
-  --download-missing \
   --output-dir converted \
   --workers 16 \
   --rpm 10000

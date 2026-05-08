@@ -12,5 +12,8 @@ source/
 metadata/*
 !metadata/
 !metadata/uap-csv.csv
+!metadata/pdf_manifest.tsv
+!metadata/download_summary.json
+!metadata/curl_download.log
 
 *.part

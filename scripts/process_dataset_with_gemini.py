@@ -245,6 +245,68 @@ def read_local_assets(downloads_dir: Path) -> list[Asset]:
     return assets
 
 
+def read_pdf_manifest_assets(
+    pdf_manifest_path: Path,
+    downloads_dir: Path,
+    *,
+    download_missing: bool,
+) -> tuple[list[Asset], list[dict[str, str]]]:
+    assets: list[Asset] = []
+    skipped: list[dict[str, str]] = []
+    local_index = build_local_index(downloads_dir)
+
+    with pdf_manifest_path.open(encoding="utf-8") as handle:
+        for row_number, line in enumerate(handle, start=1):
+            line = line.rstrip("\n")
+            if not line:
+                continue
+            parts = line.split("\t")
+            if len(parts) < 7:
+                skipped.append({"row": str(row_number), "title": "", "reason": "malformed PDF manifest row"})
+                continue
+
+            filename, url, title, agency, release_date, incident_date, incident_location = parts[:7]
+            local_path = downloads_dir / filename
+            if not local_path.exists():
+                local_path = local_index.get(normalized_name(filename))
+
+            if local_path is None and download_missing:
+                try:
+                    local_path = download_asset(url, downloads_dir, filename)
+                    local_index[normalized_name(local_path.name)] = local_path
+                except Exception as exc:  # noqa: BLE001 - keep batch processing resilient.
+                    skipped.append({"row": str(row_number), "title": title, "reason": str(exc)})
+                    continue
+
+            if local_path is None:
+                skipped.append({"row": str(row_number), "title": title, "reason": "PDF not downloaded"})
+                continue
+            if local_path.suffix.lower() != ".pdf":
+                skipped.append({"row": str(row_number), "title": title, "reason": "manifest file is not a PDF"})
+                continue
+
+            details = []
+            if incident_date:
+                details.append(f"Incident date: {incident_date}")
+            if incident_location:
+                details.append(f"Incident location: {incident_location}")
+
+            assets.append(
+                Asset(
+                    title=title or local_path.stem,
+                    asset_type="PDF",
+                    source_url=url,
+                    local_path=local_path,
+                    row_number=row_number,
+                    release_date=release_date,
+                    agency=agency,
+                    description="; ".join(details),
+                )
+            )
+
+    return assets, skipped
+
+
 def parse_page_selection(value: str) -> set[int]:
     selected: set[int] = set()
     for part in value.split(","):
@@ -781,6 +843,7 @@ def build_arg_parser() -> argparse.ArgumentParser:
         description="Process the UFO-USA dataset page by page with Gemini and write Markdown files.",
     )
     parser.add_argument("--metadata", type=Path, default=Path("metadata/uap-csv.csv"))
+    parser.add_argument("--pdf-manifest", type=Path, default=Path("metadata/pdf_manifest.tsv"))
     parser.add_argument("--downloads-dir", type=Path, default=Path("downloads/war-gov-ufo-release-1"))
     parser.add_argument("--output-dir", type=Path, default=Path("converted"))
     parser.add_argument("--model", default=os.environ.get("GEMINI_MODEL", DEFAULT_MODEL))
@@ -825,16 +888,25 @@ def main() -> int:
     args.output_dir = args.output_dir.resolve()
     args.downloads_dir = args.downloads_dir.resolve()
     args.metadata = args.metadata.resolve()
+    args.pdf_manifest = args.pdf_manifest.resolve()
 
     skipped: list[dict[str, str]] = []
-    if args.local_only or not args.metadata.exists():
+    if args.local_only:
         assets = read_local_assets(args.downloads_dir)
-    else:
+    elif args.pdf_manifest.exists():
+        assets, skipped = read_pdf_manifest_assets(
+            args.pdf_manifest,
+            args.downloads_dir,
+            download_missing=args.download_missing,
+        )
+    elif args.metadata.exists():
         assets, skipped = read_metadata_assets(
             args.metadata,
             args.downloads_dir,
             download_missing=args.download_missing,
         )
+    else:
+        assets = read_local_assets(args.downloads_dir)
 
     if args.max_docs:
         assets = assets[: args.max_docs]
