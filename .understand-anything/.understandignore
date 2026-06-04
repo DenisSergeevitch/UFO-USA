@@ -1,0 +1,35 @@
+# .understandignore — patterns for files/dirs to exclude from analysis
+# Syntax: same as .gitignore (globs, # comments, ! negation, trailing / for dirs)
+# Lines below are suggestions — uncomment to activate.
+# Use ! prefix to force-include something excluded by defaults.
+#
+# Built-in defaults (always excluded unless negated):
+#   node_modules/, .git/, dist/, build/, obj/, *.lock, *.min.js, etc.
+#
+# --- From .gitignore (uncomment to exclude) ---
+
+# .DS_Store
+# .env
+# *.py[cod]
+# downloads/
+# outputs/
+# source/
+# metadata/*
+# !metadata/
+# !metadata/uap-csv.csv
+# !metadata/pdf_manifest.tsv
+# !metadata/download_summary.json
+# !metadata/curl_download.log
+# *.part
+
+# --- Detected directories (uncomment to exclude) ---
+
+# scripts/
+# converted/
+# metadata/
+
+# --- Test file patterns (uncomment to exclude) ---
+
+# *.test.*
+# *.spec.*
+# *.snap
